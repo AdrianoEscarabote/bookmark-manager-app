@@ -13,7 +13,7 @@ const SignInForm = () => {
   } = useForm()
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log('data ' + JSON.stringify(data))
+    console.log(JSON.stringify(data))
   })
 
   return (

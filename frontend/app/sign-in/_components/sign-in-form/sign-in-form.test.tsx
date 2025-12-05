@@ -72,6 +72,6 @@ describe('SignInForm', () => {
 
     expect(screen.queryByText(/required/i)).toBeNull()
     expect(screen.queryByText(/Invalid email address/i)).toBeNull()
-    expect(logSpy).toHaveBeenCalledWith(`data ${JSON.stringify({ email, password })}`)
+    expect(logSpy).toHaveBeenCalledWith(`${JSON.stringify({ email, password })}`)
   })
 })
