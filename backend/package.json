@@ -1,0 +1,51 @@
+{
+  "name": "bookmark-manager-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --watch \"src\" --exec \"ts-node -r tsconfig-paths/register src/index.ts\"",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js",
+    "test": "jest --passWithNoTests",
+    "seed": "ts-node prisma/seed.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AdrianoEscarabote/bookmark-manager-app.git"
+  },
+  "author": "AdrianoEscarabote",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AdrianoEscarabote/bookmark-manager-app/issues"
+  },
+  "homepage": "https://github.com/AdrianoEscarabote/bookmark-manager-app#readme",
+  "dependencies": {
+    "@prisma/client": "^7.1.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.4",
+    "prisma": "^7.1.0",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}
