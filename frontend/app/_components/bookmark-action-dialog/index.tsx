@@ -1,7 +1,7 @@
 'use client'
 
-import { X } from 'lucide-react'
-import * as React from 'react'
+import { Loader2Icon, X } from 'lucide-react'
+import { useState } from 'react'
 
 import {
   Dialog,
@@ -11,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 
 import Button from '../button'
@@ -23,7 +22,6 @@ interface BookmarkActionDialogProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   onConfirm?: () => Promise<void> | void
-  trigger?: React.ReactNode
   loading?: boolean
 }
 
@@ -63,10 +61,9 @@ export function BookmarkActionDialog({
   open,
   onOpenChange,
   onConfirm,
-  trigger,
   loading,
 }: BookmarkActionDialogProps) {
-  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const isControlled = open !== undefined
   const isOpen = isControlled ? open : uncontrolledOpen
   const handleOpenChange = (v: boolean) => {
@@ -83,14 +80,6 @@ export function BookmarkActionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button hierarchy="secondary" size="sm" type="button">
-            {c.confirmLabel}
-          </Button>
-        )}
-      </DialogTrigger>
-
       <DialogContent
         showCloseButton={false}
         style={{ maxWidth: '28rem' }}
@@ -120,7 +109,7 @@ export function BookmarkActionDialog({
             onClick={handleConfirm}
             showIcon={false}
           >
-            {loading ? 'Processing…' : c.confirmLabel}
+            {loading ? <Loader2Icon className="size-4 animate-spin" /> : c.confirmLabel}
           </Button>
         </DialogFooter>
 

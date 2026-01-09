@@ -3,83 +3,100 @@ import userEvent from '@testing-library/user-event'
 
 import { BookmarkActionDialog } from './index'
 
-describe('BookmarkActionDialog', () => {
-  const openDialog = async (name: string | RegExp) => {
-    const user = userEvent.setup()
-    await user.click(await screen.findByRole('button', { name }))
-    return user
-  }
+function getConfirmButton(dialog: HTMLElement) {
+  const buttons = within(dialog).getAllByRole('button')
 
-  it('renders default trigger with correct label for each action', () => {
-    const { rerender } = render(<BookmarkActionDialog action="archive" />)
-    expect(screen.getByRole('button', { name: 'Archive' })).toBeInTheDocument()
-
-    rerender(<BookmarkActionDialog action="unarchive" />)
-    expect(screen.getByRole('button', { name: 'Unarchive' })).toBeInTheDocument()
-
-    rerender(<BookmarkActionDialog action="delete" />)
-    expect(screen.getByRole('button', { name: 'Delete permanently' })).toBeInTheDocument()
+  const confirm = buttons.find((b) => {
+    const label = b.getAttribute('aria-label') ?? ''
+    const text = (b.textContent ?? '').trim()
+    return label !== 'Close' && text.toLowerCase() !== 'cancel'
   })
 
-  it('opens and shows title/description for Archive', async () => {
-    render(<BookmarkActionDialog action="archive" />)
-    const user = await openDialog('Archive')
+  if (!confirm) throw new Error('Confirm button not found')
+  return confirm
+}
 
-    expect(await screen.findByText('Archive bookmark')).toBeInTheDocument()
-    expect(screen.getByText('Are you sure you want to archive this bookmark?')).toBeInTheDocument()
+describe('BookmarkActionDialog', () => {
+  it('renders correct title/description/confirm label for Archive', () => {
+    render(<BookmarkActionDialog action="archive" open />)
+
+    const dlg = screen.getByRole('dialog')
+    expect(within(dlg).getByText('Archive bookmark')).toBeInTheDocument()
+    expect(
+      within(dlg).getByText('Are you sure you want to archive this bookmark?'),
+    ).toBeInTheDocument()
+    expect(within(dlg).getByRole('button', { name: 'Archive' })).toBeInTheDocument()
+    expect(within(dlg).getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+  })
+
+  it('renders correct title/description/confirm label for Unarchive', () => {
+    render(<BookmarkActionDialog action="unarchive" open />)
+
+    const dlg = screen.getByRole('dialog')
+    expect(within(dlg).getByText('Unarchive bookmark')).toBeInTheDocument()
+    expect(
+      within(dlg).getByText('Move this bookmark back to your active list?'),
+    ).toBeInTheDocument()
+    expect(within(dlg).getByRole('button', { name: 'Unarchive' })).toBeInTheDocument()
+  })
+
+  it('renders correct title/description/confirm label for Delete', () => {
+    render(<BookmarkActionDialog action="delete" open />)
+
+    const dlg = screen.getByRole('dialog')
+    expect(within(dlg).getByText('Delete bookmark')).toBeInTheDocument()
+    expect(
+      within(dlg).getByText('Are you sure you want to delete this bookmark?'),
+    ).toBeInTheDocument()
+    expect(within(dlg).getByRole('button', { name: 'Delete permanently' })).toBeInTheDocument()
+  })
+
+  it('controlled: clicking Cancel calls onOpenChange(false)', async () => {
+    const onOpenChange = jest.fn()
+    const user = userEvent.setup()
+
+    render(<BookmarkActionDialog action="archive" open onOpenChange={onOpenChange} />)
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
-    await waitFor(() => expect(screen.queryByText('Archive bookmark')).not.toBeInTheDocument())
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('calls onConfirm and closes (uncontrolled)', async () => {
-    const onConfirm = jest.fn()
-    render(<BookmarkActionDialog action="archive" onConfirm={onConfirm} />)
+  it('controlled: clicking Close (X) calls onOpenChange(false)', async () => {
+    const onOpenChange = jest.fn()
+    const user = userEvent.setup()
 
-    const user = await openDialog('Archive')
+    render(<BookmarkActionDialog action="archive" open onOpenChange={onOpenChange} />)
 
-    await user.click(screen.getByRole('button', { name: 'Archive' }))
-    expect(onConfirm).toHaveBeenCalledTimes(1)
-
-    await waitFor(() => expect(screen.queryByText('Archive bookmark')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
-  it('closes when clicking the X button', async () => {
-    render(<BookmarkActionDialog action="archive" />)
-    const user = await openDialog('Archive')
+  it('controlled: clicking Confirm awaits onConfirm and then calls onOpenChange(false)', async () => {
+    const onOpenChange = jest.fn()
+    const onConfirm = jest.fn(async () => undefined)
+    const user = userEvent.setup()
 
-    await user.click(screen.getByLabelText('Close'))
-    await waitFor(() => expect(screen.queryByText('Archive bookmark')).not.toBeInTheDocument())
+    render(
+      <BookmarkActionDialog
+        action="archive"
+        open
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+      />,
+    )
+
+    const dlg = screen.getByRole('dialog')
+    await user.click(getConfirmButton(dlg))
+
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
   })
 
   it('disables confirm button when loading', () => {
     render(<BookmarkActionDialog action="delete" open loading />)
 
     const dlg = screen.getByRole('dialog')
-    expect(within(dlg).getByText('Delete bookmark')).toBeInTheDocument()
-
-    const confirmBtn = within(dlg).getByRole('button', { name: 'Processing…' })
+    const confirmBtn = getConfirmButton(dlg)
     expect(confirmBtn).toBeDisabled()
-  })
-
-  it('controlled mode: calls onOpenChange when closing', async () => {
-    const onOpenChange = jest.fn()
-    render(<BookmarkActionDialog action="unarchive" open onOpenChange={onOpenChange} />)
-
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(onOpenChange).toHaveBeenCalledWith(false)
-
-    await user.click(screen.getByLabelText('Close'))
-    expect(onOpenChange).toHaveBeenCalledWith(false)
-  })
-
-  it('accepts custom trigger', async () => {
-    render(
-      <BookmarkActionDialog
-        action="archive"
-        trigger={<button data-testid="open-archive">Open</button>}
-      />,
-    )
   })
 })
