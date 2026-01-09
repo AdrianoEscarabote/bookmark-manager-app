@@ -1,4 +1,4 @@
-import z from "zod"
+import { z } from "zod"
 
 import { ok, serverError, validationError, ValidationErrorBody } from "../helpers"
 import { HttpRequest, HttpResponse, IBookmarkRepository, IController } from "../protocols"
