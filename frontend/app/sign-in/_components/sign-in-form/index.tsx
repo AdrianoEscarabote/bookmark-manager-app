@@ -1,11 +1,19 @@
 'use client'
 
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import Button from '@/app/_components/button'
 import Input from '@/app/_components/input'
+import { useBookmarksStore } from '@/app/_store/bookmarks'
+import { api } from '@/utils/api'
 
 const SignInForm = () => {
+  const router = useRouter()
+  const [serverError, setServerError] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -13,12 +21,34 @@ const SignInForm = () => {
   } = useForm()
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log(JSON.stringify(data))
+    setServerError(null)
+    try {
+      const response = await api.post('/auth/sign-in', data)
+      useBookmarksStore.getState().reset()
+      if (response.status === 200) {
+        router.push('/')
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const payload = error.response?.data
+        const message =
+          typeof payload === 'string'
+            ? payload
+            : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ((payload as any)?.message ?? error.message ?? 'Error signing in')
+        setServerError(message)
+        setTimeout(() => {
+          setServerError(null)
+        }, 5000)
+        return
+      }
+      setServerError('Error signing in')
+    }
   })
 
   return (
     <form onSubmit={onSubmit}>
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-4">
         <Input
           label="Email"
           type="email"
@@ -51,6 +81,13 @@ const SignInForm = () => {
           error={errors.password ? true : false}
           helperText={errors.password?.message as string}
         />
+
+        {serverError ? (
+          <p className="text-preset-5 absolute top-0 right-0 z-40 text-red-600" role="alert">
+            {serverError}
+          </p>
+        ) : null}
+
         <Button hierarchy="primary" size="md" className="max-w-none" type="submit">
           Log in
         </Button>
