@@ -8,12 +8,6 @@ jest.mock('next/image', () => ({
   // eslint-disable-next-line @next/next/no-img-element
   default: (props: any) => <img {...props} alt={props.alt} />,
 }))
-jest.mock('@/components/ui/separator', () => ({
-  Separator: (props: any) => <hr data-testid="separator" {...props} />,
-}))
-jest.mock('../bookmark-menu', () => ({
-  BookmarkMenu: () => <div data-testid="bookmark-menu" />,
-}))
 
 const baseProps = {
   id: '1',
@@ -31,7 +25,7 @@ const baseProps = {
 
 describe('Card', () => {
   it('renders title, favicon and hostname without protocol/www', () => {
-    render(<Card {...baseProps} />)
+    render(<Card bookmark={baseProps} />)
 
     expect(screen.getByText('GitHub')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'GitHub' })).toHaveAttribute('src', '/favicon.png')
@@ -39,7 +33,7 @@ describe('Card', () => {
   })
 
   it('renders description, tags and visit count', () => {
-    render(<Card {...baseProps} />)
+    render(<Card bookmark={baseProps} />)
 
     expect(screen.getByText('The world’s leading platform for version control')).toBeInTheDocument()
 
@@ -50,19 +44,19 @@ describe('Card', () => {
   })
 
   it('formats lastVisited and createdAt as "dd MMM" (en-GB)', () => {
-    render(<Card {...baseProps} />)
+    render(<Card bookmark={baseProps} />)
 
     expect(screen.getByText('16 Aug')).toBeInTheDocument()
     expect(screen.getByText('15 Feb')).toBeInTheDocument()
   })
 
   it('shows "-" when lastVisited is null', () => {
-    render(<Card {...baseProps} lastVisited={null} />)
+    render(<Card bookmark={{ ...baseProps, lastVisited: null }} />)
     expect(screen.getByText('-')).toBeInTheDocument()
   })
 
   it('parses hostname for URLs without protocol', () => {
-    render(<Card {...baseProps} url="github.com/openai/repo" />)
+    render(<Card bookmark={{ ...baseProps, url: 'github.com/openai/repo' }} />)
     expect(screen.getByText('github.com')).toBeInTheDocument()
   })
 })
