@@ -1,11 +1,19 @@
 'use client'
 
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import Button from '@/app/_components/button'
 import Input from '@/app/_components/input'
+import { useBookmarksStore } from '@/app/_store/bookmarks'
+import { api } from '@/utils/api'
 
 const SignUpForm = () => {
+  const router = useRouter()
+  const [serverError, setServerError] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -13,20 +21,42 @@ const SignUpForm = () => {
   } = useForm()
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log('data ' + JSON.stringify(data))
+    setServerError(null)
+    try {
+      const response = await api.post('/auth/sign-up', data)
+      useBookmarksStore.getState().reset()
+      if (response.status === 201) {
+        router.push('/')
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const payload = error.response?.data
+        const message =
+          typeof payload === 'string'
+            ? payload
+            : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              ((payload as any)?.message ?? error.message ?? 'Error signing up')
+        setServerError(message)
+        setTimeout(() => {
+          setServerError(null)
+        }, 5000)
+        return
+      }
+      setServerError('Error signing up')
+    }
   })
 
   return (
     <form onSubmit={onSubmit}>
-      <div className="flex flex-col gap-4">
+      <div className="relative flex flex-col gap-4">
         <Input
           label="Full Name"
           type="text"
-          id="full-name"
-          showHelperText={errors.fullName?.message ? true : false}
-          error={errors.fullName ? true : false}
-          helperText={errors.fullName?.message as string}
-          {...register('fullName', {
+          id="name"
+          showHelperText={errors.name?.message ? true : false}
+          error={errors.name ? true : false}
+          helperText={errors.name?.message as string}
+          {...register('name', {
             required: 'Full Name is required',
             minLength: {
               value: 3,
@@ -68,6 +98,13 @@ const SignUpForm = () => {
           error={errors.password ? true : false}
           helperText={errors.password?.message as string}
         />
+
+        {serverError ? (
+          <p className="text-preset-5 absolute top-0 right-0 z-40 text-red-600" role="alert">
+            {serverError}
+          </p>
+        ) : null}
+
         <Button hierarchy="primary" size="md" className="max-w-none" type="submit">
           Sign up
         </Button>
