@@ -22,6 +22,11 @@ const DescriptionField = React.forwardRef<HTMLTextAreaElement, Props>(
             id={id}
             maxLength={maxLength}
             ref={ref}
+            style={{
+              wordBreak: 'break-word',
+              overflowWrap: 'anywhere',
+              WebkitOverflowScrolling: 'touch',
+            }}
             className={`bg-neutral-0 max-h-35 min-h-22.5 cursor-pointer resize-y border border-neutral-500 wrap-break-word focus:ring-teal-700 dark:border-neutral-300 dark:bg-neutral-600 dark:focus:ring-neutral-300 ${error ? 'border-red-700 dark:border-red-700' : ''}`}
             {...rest}
           />

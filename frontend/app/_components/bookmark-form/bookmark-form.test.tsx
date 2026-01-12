@@ -9,6 +9,7 @@ describe('BookmarkForm', () => {
     const handleOpenChange = jest.fn()
     render(
       <BookmarkForm
+        loading={false}
         defaultValues={props}
         submitLabel="Add Bookmark"
         onSubmit={onSubmit}

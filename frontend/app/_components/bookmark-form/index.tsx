@@ -1,4 +1,5 @@
 'use client'
+import { Loader2 } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { DialogFooter } from '@/components/ui/dialog'
@@ -15,6 +16,7 @@ export type BookmarkFormValues = {
 }
 
 type Props = {
+  loading: boolean
   defaultValues?: Partial<BookmarkFormValues>
   submitLabel: string
   onSubmit: (values: BookmarkFormValues) => void
@@ -23,7 +25,13 @@ type Props = {
 
 const MAX_DESCRIPTION = 280
 
-export function BookmarkForm({ defaultValues, submitLabel, onSubmit, handleOpenChange }: Props) {
+export function BookmarkForm({
+  loading,
+  defaultValues,
+  submitLabel,
+  onSubmit,
+  handleOpenChange,
+}: Props) {
   const {
     register,
     handleSubmit,
@@ -106,8 +114,9 @@ export function BookmarkForm({ defaultValues, submitLabel, onSubmit, handleOpenC
           >
             Cancel
           </Button>
-          <Button type="submit" hierarchy="primary" size="md">
-            {/* Add Bookmark */ submitLabel}
+          <Button type="submit" hierarchy="primary" size="md" disabled={loading}>
+            {!loading && submitLabel}
+            {loading && <Loader2 className="animate-spin" />}
           </Button>
         </DialogFooter>
       </fieldset>
