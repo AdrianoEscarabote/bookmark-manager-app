@@ -29,6 +29,20 @@ export default function SignUp() {
 
         <SignUpForm />
 
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/demo"
+            prefetch={false}
+            className="dark:text-neutral-0 inline-flex w-full items-center justify-center rounded-[12px] border border-neutral-400 px-4 py-3 text-sm font-medium text-neutral-900 hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-600"
+          >
+            Try demo mode
+          </Link>
+
+          <p className="text-xs text-neutral-700 dark:text-neutral-200">
+            Demo mode runs locally — changes won’t be saved to the database.
+          </p>
+        </div>
+
         <div className="flex flex-col items-center gap-3 text-center" aria-labelledby="auth-links">
           <h3 id="auth-links" className="sr-only">
             Authentication Links
