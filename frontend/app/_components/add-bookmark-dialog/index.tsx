@@ -3,6 +3,7 @@
 import { Plus, XIcon } from 'lucide-react'
 import * as React from 'react'
 
+import { isDemoModeClient } from '@/app/_lib/demo-bookmarks'
 import { useBookmarksStore } from '@/app/_store/bookmarks'
 import {
   Dialog,
@@ -66,6 +67,19 @@ export function AddBookmarkDialog({ open, onOpenChange, trigger }: AddBookmarkDi
     }
 
     try {
+      if (isDemoModeClient()) {
+        const id =
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `demo-${Date.now()}`
+
+        addBookmark({ ...formattedData, id })
+        showBookmarkToast('success')
+        handleOpenChange(false)
+        setLoading(false)
+        return
+      }
+
       const response = await api.post('/bookmark/create', formattedData)
       addBookmark({ ...formattedData, id: response.data.id })
       showBookmarkToast('success')

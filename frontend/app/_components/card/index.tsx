@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { isDemoModeClient } from '@/app/_lib/demo-bookmarks'
 import { Bookmark, useBookmarksStore } from '@/app/_store/bookmarks'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/utils/api'
@@ -41,12 +42,18 @@ const Card = ({ bookmark }: CardProps) => {
         onOpenChange={() => setShowUnarchiveDialog(!showUnarchiveDialog)}
         onConfirm={async () => {
           setLoading(true)
+
+          if (isDemoModeClient()) {
+            toggleArchive(bookmark.id)
+            showBookmarkToast('unarchived')
+            setTimeout(() => setLoading(false), 300)
+            return
+          }
+
           await api.patch('/bookmark/archive', { bookmarkId: bookmark.id })
           showBookmarkToast('unarchived')
           toggleArchive(bookmark.id)
-          setTimeout(() => {
-            setLoading(false)
-          }, 500)
+          setTimeout(() => setLoading(false), 500)
         }}
         loading={loading}
       />
@@ -56,12 +63,18 @@ const Card = ({ bookmark }: CardProps) => {
         onOpenChange={() => setShowArchiveDialog(!showArchiveDialog)}
         onConfirm={async () => {
           setLoading(true)
+
+          if (isDemoModeClient()) {
+            toggleArchive(bookmark.id)
+            showBookmarkToast('archived')
+            setTimeout(() => setLoading(false), 300)
+            return
+          }
+
           await api.patch('/bookmark/archive', { bookmarkId: bookmark.id })
           showBookmarkToast('archived')
           toggleArchive(bookmark.id)
-          setTimeout(() => {
-            setLoading(false)
-          }, 500)
+          setTimeout(() => setLoading(false), 500)
         }}
         loading={loading}
       />
@@ -71,12 +84,18 @@ const Card = ({ bookmark }: CardProps) => {
         onOpenChange={() => setShowDeleteDialog(!showDeleteDialog)}
         onConfirm={async () => {
           setLoading(true)
+
+          if (isDemoModeClient()) {
+            remove(bookmark.id)
+            showBookmarkToast('deleted')
+            setTimeout(() => setLoading(false), 300)
+            return
+          }
+
           await api.delete('/bookmark/delete', { data: { bookmarkId: bookmark.id } })
           showBookmarkToast('deleted')
           remove(bookmark.id)
-          setTimeout(() => {
-            setLoading(false)
-          }, 500)
+          setTimeout(() => setLoading(false), 500)
         }}
         loading={loading}
       />
@@ -115,6 +134,11 @@ const Card = ({ bookmark }: CardProps) => {
               onArchive={() => setShowArchiveDialog(!showArchiveDialog)}
               onUnarchive={() => setShowUnarchiveDialog(!showUnarchiveDialog)}
               onVisit={async () => {
+                if (isDemoModeClient()) {
+                  incrementVisit(bookmark.id)
+                  return
+                }
+
                 await api.patch('/bookmark/update', {
                   bookmarkId: bookmark.id,
                   action: 'visit',
@@ -127,7 +151,6 @@ const Card = ({ bookmark }: CardProps) => {
               onPin={async () => {
                 const willPin = !bookmark.pinned
 
-                // ainda vale manter (caso estado esteja desatualizado)
                 if (willPin && pinnedCount >= PIN_LIMIT) {
                   toast.error(`You can only pin up to ${PIN_LIMIT} bookmarks.`)
                   return false
@@ -139,15 +162,19 @@ const Card = ({ bookmark }: CardProps) => {
                   return false
                 }
 
+                // demo: não chama backend
+                if (isDemoModeClient()) {
+                  if (!bookmark.pinned) showBookmarkToast('pinned')
+                  return true
+                }
+
                 try {
                   await api.patch('/bookmark/update', {
                     bookmarkId: bookmark.id,
                     pinned: willPin,
                   })
 
-                  if (!bookmark.pinned) {
-                    showBookmarkToast('pinned')
-                  }
+                  if (!bookmark.pinned) showBookmarkToast('pinned')
                   return true
                 } catch {
                   togglePin(bookmark.id)

@@ -3,6 +3,7 @@
 import { XIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
+import { isDemoModeClient } from '@/app/_lib/demo-bookmarks'
 import { type Bookmark, useBookmarksStore } from '@/app/_store/bookmarks'
 import {
   Dialog,
@@ -44,31 +45,43 @@ export function EditBookmarkDialog({ open, onOpenChange, bookmark }: EditBookmar
 
   const handleSubmit = async (data: BookmarkFormValues) => {
     setLoading(true)
+
     const tags = data.tags
       .split(',')
       .map((tag) => tag.trim())
       .filter(Boolean)
 
-    await api.patch('/bookmark/update', {
-      bookmarkId: bookmark.id,
+    const patch = {
       title: data.title,
       description: data.description,
       url: data.url,
       favicon: getFaviconUrl(data.url),
       tags,
-    })
+    }
 
-    update(bookmark.id, {
-      title: data.title,
-      description: data.description,
-      url: data.url,
-      favicon: getFaviconUrl(data.url),
-      tags,
-    })
+    try {
+      if (isDemoModeClient()) {
+        update(bookmark.id, patch)
+        showBookmarkToast('changes_saved')
+        setLoading(false)
+        handleOpenChange(false)
+        return
+      }
 
-    showBookmarkToast('changes_saved')
-    setLoading(false)
-    handleOpenChange(false)
+      await api.patch('/bookmark/update', {
+        bookmarkId: bookmark.id,
+        ...patch,
+      })
+
+      update(bookmark.id, patch)
+
+      showBookmarkToast('changes_saved')
+      setLoading(false)
+      handleOpenChange(false)
+    } catch (error) {
+      setLoading(false)
+      console.log(error)
+    }
   }
 
   const defaultValues = useMemo(

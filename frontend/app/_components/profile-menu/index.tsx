@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
+import { isDemoModeClient, resetDemoBookmarks } from '@/app/_lib/demo-bookmarks'
 import { useBookmarksStore } from '@/app/_store/bookmarks'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +21,13 @@ const ProfileMenu = () => {
   const router = useRouter()
 
   const handleLogout = async () => {
+    if (isDemoModeClient()) {
+      resetDemoBookmarks()
+      useBookmarksStore.getState().reset()
+      router.push('/demo/exit')
+      return
+    }
+
     const response = await api.post('/auth/logout')
     if (response.status === 204) {
       useBookmarksStore.getState().reset()
