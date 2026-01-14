@@ -3,18 +3,18 @@ import { NextResponse } from 'next/server'
 
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname
-  // páginas de autenticação (redirecionar usuário logado)
+
   const isAuthPage =
     pathname.startsWith('/sign-in') ||
     pathname.startsWith('/sign-up') ||
     pathname.startsWith('/forgot-password')
 
   const token = req.cookies.get('token')?.value
-  const id = req.cookies.get('id')?.value
+  const isDemo = req.cookies.get('demo')?.value === '1'
 
   const isProtectedRoute = pathname === '/' || pathname.startsWith('/archived')
 
-  const isLoggedIn = Boolean(token)
+  const isLoggedIn = Boolean(token) || isDemo
 
   if (!isLoggedIn && !isAuthPage && isProtectedRoute) {
     const url = req.nextUrl.clone()
@@ -32,5 +32,14 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/archived/:path*', '/sign-in', '/sign-up', '/forgot-password', '/reset-password'],
+  matcher: [
+    '/',
+    '/archived/:path*',
+    '/sign-in',
+    '/sign-up',
+    '/forgot-password',
+    '/reset-password',
+    '/demo',
+    '/demo/exit',
+  ],
 }
