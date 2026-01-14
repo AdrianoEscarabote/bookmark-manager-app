@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 
+import {
+  hydrateDemoBookmarks,
+  isDemoModeClient,
+  saveDemoBookmarks,
+} from '@/app/_lib/demo-bookmarks'
 import { api } from '@/utils/api'
 
 export type Bookmark = {
@@ -22,6 +27,7 @@ type State = {
   loading: boolean
   hydrated: boolean
   error?: string
+  source?: 'api' | 'demo'
 }
 
 type Actions = {
@@ -39,86 +45,121 @@ type Actions = {
 
 export const PIN_LIMIT = 3
 
-export const useBookmarksStore = create<State & Actions>((set, get) => ({
-  items: [],
-  loading: false,
-  hydrated: false,
-  error: undefined,
+export const useBookmarksStore = create<State & Actions>((set, get) => {
+  const persistIfDemo = () => {
+    if (!isDemoModeClient()) return
+    saveDemoBookmarks(get().items)
+  }
 
-  setHydrated: (v) => set({ hydrated: v }),
-  setItems: (items) => set({ items }),
+  return {
+    items: [],
+    loading: false,
+    hydrated: false,
+    error: undefined,
+    source: undefined,
 
-  reset: () => set({ items: [], loading: false, hydrated: false, error: undefined }),
+    setHydrated: (v) => set({ hydrated: v }),
+    setItems: (items) => set({ items }),
 
-  fetch: async () => {
-    if (get().loading) return
-    if (get().hydrated) return
+    reset: () =>
+      set({ items: [], loading: false, hydrated: false, error: undefined, source: undefined }),
 
-    set({ loading: true, error: undefined })
+    fetch: async () => {
+      const mode: State['source'] = isDemoModeClient() ? 'demo' : 'api'
 
-    try {
-      const res = await api.get('/bookmark/list')
-      set({ items: res.data as Bookmark[], hydrated: true, loading: false })
-    } catch (e: any) {
-      const status = e?.response?.status
+      if (get().loading) return
+      if (get().hydrated && get().source === mode) return
 
-      if (status === 401) {
-        set({ loading: false, hydrated: false, error: undefined })
-        return
-      }
+      set({ loading: true, error: undefined })
 
-      set({ loading: false, hydrated: false, error: 'Failed to load bookmarks' })
-    }
-  },
-
-  toggleArchive: (id) =>
-    set((s) => ({
-      items: s.items.map((b) => (b.id === id ? { ...b, isArchived: !b.isArchived } : b)),
-    })),
-
-  togglePin: (id) => {
-    let canPin = true
-
-    set((s) => {
-      const current = s.items.find((b) => b.id === id)
-      if (!current) return s
-
-      const willPin = !current.pinned
-
-      if (willPin) {
-        const pinnedCount = s.items.filter((b) => b.pinned).length
-        if (pinnedCount >= PIN_LIMIT) {
-          canPin = false
-          return s
+      try {
+        if (mode === 'demo') {
+          const items = await hydrateDemoBookmarks()
+          set({ items, hydrated: true, loading: false, source: 'demo' })
+          return
         }
+
+        const res = await api.get('/bookmark/list')
+        set({ items: res.data as Bookmark[], hydrated: true, loading: false, source: 'api' })
+      } catch (e: any) {
+        const status = e?.response?.status
+
+        if (status === 401) {
+          set({ loading: false, hydrated: false, error: undefined, source: undefined })
+          return
+        }
+
+        set({
+          loading: false,
+          hydrated: false,
+          error: 'Failed to load bookmarks',
+          source: undefined,
+        })
       }
+    },
 
-      return {
-        items: s.items.map((b) => (b.id === id ? { ...b, pinned: !b.pinned } : b)),
-      }
-    })
+    toggleArchive: (id) => {
+      set((s) => ({
+        items: s.items.map((b) => (b.id === id ? { ...b, isArchived: !b.isArchived } : b)),
+      }))
+      persistIfDemo()
+    },
 
-    return canPin
-  },
+    togglePin: (id) => {
+      let canPin = true
 
-  incrementVisit: (id) =>
-    set((s) => ({
-      items: s.items.map((b) =>
-        b.id === id
-          ? { ...b, visitCount: b.visitCount + 1, lastVisited: new Date().toISOString() }
-          : b,
-      ),
-    })),
+      set((s) => {
+        const current = s.items.find((b) => b.id === id)
+        if (!current) return s
 
-  remove: (id) => set((s) => ({ items: s.items.filter((b) => b.id !== id) })),
+        const willPin = !current.pinned
 
-  update: (id, patch) =>
-    set((s) => ({
-      items: s.items.map((b) => (b.id === id ? { ...b, ...patch } : b)),
-    })),
+        if (willPin) {
+          const pinnedCount = s.items.filter((b) => b.pinned).length
+          if (pinnedCount >= PIN_LIMIT) {
+            canPin = false
+            return s
+          }
+        }
 
-  addBookmark: (bookmark) => set((s) => ({ items: [bookmark, ...s.items] })),
-}))
+        return {
+          items: s.items.map((b) => (b.id === id ? { ...b, pinned: !b.pinned } : b)),
+        }
+      })
+
+      persistIfDemo()
+      return canPin
+    },
+
+    incrementVisit: (id) => {
+      set((s) => ({
+        items: s.items.map((b) =>
+          b.id === id
+            ? { ...b, visitCount: b.visitCount + 1, lastVisited: new Date().toISOString() }
+            : b,
+        ),
+      }))
+      persistIfDemo()
+    },
+
+    remove: (id) => {
+      set((s) => ({ items: s.items.filter((b) => b.id !== id) }))
+      persistIfDemo()
+    },
+
+    update: (id, patch) => {
+      set((s) => ({
+        items: s.items.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+      }))
+      persistIfDemo()
+    },
+
+    addBookmark: (bookmark) => {
+      set((s) => ({ items: [bookmark, ...s.items] }))
+      persistIfDemo()
+    },
+  }
+})
 
 export const selectTags = (s: Pick<State, 'items'>) => {
   const counts = new Map<string, number>()
