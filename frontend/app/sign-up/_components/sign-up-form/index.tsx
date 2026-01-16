@@ -1,6 +1,7 @@
 'use client'
 
 import axios from 'axios'
+import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -13,6 +14,7 @@ import { api } from '@/utils/api'
 const SignUpForm = () => {
   const router = useRouter()
   const [serverError, setServerError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const {
     register,
@@ -23,6 +25,7 @@ const SignUpForm = () => {
   const onSubmit = handleSubmit(async (data) => {
     setServerError(null)
     try {
+      setLoading(true)
       const response = await api.post('/auth/sign-up', data)
       useBookmarksStore.getState().reset()
       if (response.status === 201) {
@@ -37,6 +40,7 @@ const SignUpForm = () => {
             : // eslint-disable-next-line @typescript-eslint/no-explicit-any
               ((payload as any)?.message ?? error.message ?? 'Error signing up')
         setServerError(message)
+        setLoading(false)
         setTimeout(() => {
           setServerError(null)
         }, 5000)
@@ -106,7 +110,7 @@ const SignUpForm = () => {
         ) : null}
 
         <Button hierarchy="primary" size="md" className="max-w-none" type="submit">
-          Sign up
+          {loading ? <Loader2 className="animate-spin" /> : 'Sign up'}
         </Button>
       </div>
     </form>
