@@ -2,6 +2,7 @@
 
 import { Archive, Home, X } from 'lucide-react'
 
+import { useBookmarksStore } from '@/app/_store/bookmarks'
 import { useFiltersStore } from '@/app/_store/filters'
 import Logo from '@/components/ui/icons/logo'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -20,12 +21,16 @@ import useBookmarkTags from '@/hooks/use-bookmark-tags'
 
 import NavItem from '../nav-item'
 import Tag from '../tag'
+import TagSkeleton from '../tag/tag-skeleton'
 
 export function AppSidebar() {
   const tags = useBookmarkTags()
   const selectedTags = useFiltersStore((s) => s.selectedTags)
   const toggleTag = useFiltersStore((s) => s.toggleTag)
   const { toggleSidebar } = useSidebar()
+
+  const hydrated = useBookmarksStore((s) => s.hydrated)
+  const loading = useBookmarksStore((s) => s.loading)
 
   return (
     <Sidebar className="w-full max-w-74 border-r border-neutral-300 dark:border-neutral-600">
@@ -73,16 +78,38 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-preset-5 text-neutral-900 uppercase dark:text-neutral-100">
               Tags
             </SidebarGroupLabel>
+
             <ScrollArea className="max-h-[calc(100vh-13.75rem)]">
-              {tags.map((t) => (
-                <Tag
-                  key={t.label}
-                  label={t.label}
-                  count={t.count}
-                  checked={selectedTags.includes(t.label)}
-                  onCheckedChange={(checked) => toggleTag(t.label, checked)}
-                />
-              ))}
+              {!hydrated || loading ? (
+                <div className="flex flex-col gap-0.5">
+                  <TagSkeleton labelWidthClassName="w-16" />
+                  <TagSkeleton labelWidthClassName="w-24" />
+                  <TagSkeleton labelWidthClassName="w-20" />
+                  <TagSkeleton labelWidthClassName="w-28" />
+                  <TagSkeleton labelWidthClassName="w-14" />
+                  <TagSkeleton labelWidthClassName="w-16" />
+                  <TagSkeleton labelWidthClassName="w-24" />
+                  <TagSkeleton labelWidthClassName="w-16" />
+                  <TagSkeleton labelWidthClassName="w-24" />
+                  <TagSkeleton labelWidthClassName="w-20" />
+                  <TagSkeleton labelWidthClassName="w-14" />
+                  <TagSkeleton labelWidthClassName="w-16" />
+                  <TagSkeleton labelWidthClassName="w-24" />
+                  <TagSkeleton labelWidthClassName="w-20" />
+                  <TagSkeleton labelWidthClassName="w-28" />
+                  <TagSkeleton labelWidthClassName="w-14" />
+                </div>
+              ) : (
+                tags.map((t) => (
+                  <Tag
+                    key={t.label}
+                    label={t.label}
+                    count={t.count}
+                    checked={selectedTags.includes(t.label)}
+                    onCheckedChange={(checked) => toggleTag(t.label, checked)}
+                  />
+                ))
+              )}
             </ScrollArea>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -3,18 +3,21 @@
 import { AnimatePresence, LayoutGroup, motion, Transition, useReducedMotion } from 'framer-motion'
 import { useMemo } from 'react'
 
+import { useBookmarksStore } from '@/app/_store/bookmarks'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import useBookmarks from '@/hooks/use-bookmarks'
 import { getVisibleBookmarks } from '@/utils/get-visible-bookmarks'
 
 import BookmarkHeader from '../_components/bookmark-header'
 import Card from '../_components/card'
+import { CardSkeleton } from '../_components/card/card-skeleton'
 import Header from '../_components/header'
 import { AppSidebar } from '../_components/sidebar'
 import { useFiltersStore } from '../_store/filters'
 
 export default function Archived() {
   const { data: bookmarks, loading, error } = useBookmarks({ archived: true })
+  const hydrated = useBookmarksStore((s) => s.hydrated)
 
   const sort = useFiltersStore((s) => s.sort)
   const searchQuery = useFiltersStore((s) => s.searchQuery)
@@ -47,9 +50,26 @@ export default function Archived() {
           <ScrollArea className="mt-20 max-h-[calc(100vh-5rem)]">
             <section className="flex flex-wrap items-center gap-5 p-4 md:p-8">
               <BookmarkHeader />
+
               <div className="mx-auto grid items-center gap-8 sm:grid-cols-2 md:mx-0 md:flex md:flex-wrap md:items-start">
                 <AnimatePresence mode="popLayout">
-                  {!loading && !error && visibleBookmarks.length === 0 && (
+                  {(!hydrated || loading) &&
+                    Array.from({ length: 12 }).map((_, i) => (
+                      <motion.div
+                        key={`archived-card-skeleton-${i}`}
+                        layout="position"
+                        initial={false} // aparece instantâneo
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                        transition={transition}
+                        className="transform-gpu will-change-transform"
+                        style={{ backfaceVisibility: 'hidden' }}
+                      >
+                        <CardSkeleton />
+                      </motion.div>
+                    ))}
+
+                  {hydrated && !loading && !error && visibleBookmarks.length === 0 && (
                     <motion.p
                       key="no-results"
                       initial={reduce ? false : { opacity: 0, y: 8 }}
@@ -68,7 +88,8 @@ export default function Archived() {
                     </motion.p>
                   )}
 
-                  {!loading &&
+                  {hydrated &&
+                    !loading &&
                     !error &&
                     visibleBookmarks.map((b) => (
                       <motion.div
