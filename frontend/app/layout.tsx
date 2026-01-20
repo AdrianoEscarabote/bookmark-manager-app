@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   title: 'Bookmark Manager App',
   description:
     'A simple and efficient bookmark manager application to organize and access your favorite websites with ease.',
+  manifest: '/manifest.webmanifest',
+  themeColor: '#001F1F',
 }
 
 export default function RootLayout({
