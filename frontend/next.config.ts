@@ -10,6 +10,16 @@ const withPWA = require('next-pwa')({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'icons.duckduckgo.com',
+        pathname: '/ip3/**',
+      },
+    ],
+  },
 }
 
 module.exports = withPWA(nextConfig)
