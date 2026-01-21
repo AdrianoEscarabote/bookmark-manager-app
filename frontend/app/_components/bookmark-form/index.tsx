@@ -55,6 +55,7 @@ export function BookmarkForm({
     <form onSubmit={handleSubmit(onSubmit)}>
       <fieldset className="flex flex-col gap-5 md:gap-8">
         <div className="flex flex-col gap-5">
+          {/* TITLE */}
           <Input
             error={errors.title ? true : false}
             showHelperText={!!errors.title}
@@ -63,8 +64,11 @@ export function BookmarkForm({
             {...register('title', {
               required: 'Title is required',
             })}
+            aria-label="Title"
+            data-testid="bookmark-title"
           />
 
+          {/* DESCRIPTION */}
           <DescriptionField
             label="Description"
             maxLength={MAX_DESCRIPTION}
@@ -77,8 +81,11 @@ export function BookmarkForm({
                 message: `Description must be at most ${MAX_DESCRIPTION} characters`,
               },
             })}
+            aria-label="Description"
+            data-testid="bookmark-description"
           />
 
+          {/* URL */}
           <Input
             error={errors.url ? true : false}
             showHelperText={!!errors.url}
@@ -91,7 +98,10 @@ export function BookmarkForm({
                 message: 'Please enter a valid URL',
               },
             })}
+            aria-label="URL"
+            data-testid="bookmark-url"
           />
+          {/* TAGS */}
           <Input
             error={errors.tags ? true : false}
             showHelperText={!!errors.tags}
@@ -102,6 +112,8 @@ export function BookmarkForm({
             {...register('tags', {
               required: 'At least one tag is required',
             })}
+            aria-label="Tags"
+            data-testid="bookmark-tags"
           />
         </div>
 
