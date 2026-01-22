@@ -202,6 +202,7 @@ const Card = ({ bookmark }: CardProps) => {
                 <span
                   key={tag}
                   className="text-preset-5 rounded-sm bg-neutral-100 px-2 py-0.5 text-neutral-800 dark:bg-neutral-600 dark:text-neutral-100"
+                  data-testid="card-tag"
                 >
                   {tag}
                 </span>
