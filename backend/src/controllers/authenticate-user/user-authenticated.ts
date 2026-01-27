@@ -18,9 +18,11 @@ export class AuthenticateUserController implements IController {
         return badRequest("token not found!")
       }
 
-      const { success } = await this.userAuthenticatedRepository.authenticateUser(HttpRequest.body)
+      const { email, name } = await this.userAuthenticatedRepository.authenticateUser(
+        HttpRequest.body,
+      )
 
-      return ok<AuthenticateUserReturn>({ success })
+      return ok<AuthenticateUserReturn>({ email, name })
     } catch {
       return badRequest("Unauthenticated")
     }

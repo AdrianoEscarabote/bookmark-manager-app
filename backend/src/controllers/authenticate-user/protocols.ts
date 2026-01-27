@@ -3,7 +3,8 @@ export interface AuthenticateUserParams {
 }
 
 export interface AuthenticateUserReturn {
-  success: boolean
+  name: string
+  email: string
 }
 
 export interface IUserAuthenticatedRepository {
