@@ -20,6 +20,6 @@ export class AuthenticateUserRepository implements IUserAuthenticatedRepository 
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user) throw new Error("User not found")
 
-    return { success: true }
+    return { name: user.name, email: user.email }
   }
 }
