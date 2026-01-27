@@ -1,8 +1,10 @@
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 import { isDemoModeClient, resetDemoBookmarks } from '@/app/_lib/demo-bookmarks'
 import { useBookmarksStore } from '@/app/_store/bookmarks'
+import { useUserStore } from '@/app/_store/user'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -20,10 +22,19 @@ import { ModeToggle } from '../mode-toggle'
 const ProfileMenu = () => {
   const router = useRouter()
 
+  const user = useUserStore((s) => s.user)
+  const fetchMe = useUserStore((s) => s.fetchMe)
+  const clearUser = useUserStore((s) => s.clear)
+
+  useEffect(() => {
+    void fetchMe()
+  }, [fetchMe])
+
   const handleLogout = async () => {
     if (isDemoModeClient()) {
       resetDemoBookmarks()
       useBookmarksStore.getState().reset()
+      clearUser()
       router.push('/demo/exit')
       return
     }
@@ -31,6 +42,7 @@ const ProfileMenu = () => {
     const response = await api.post('/auth/logout')
     if (response.status === 204) {
       useBookmarksStore.getState().reset()
+      clearUser()
       router.push('/sign-in')
     }
   }
@@ -55,10 +67,10 @@ const ProfileMenu = () => {
             <Image src={'/images/image-avatar.webp'} width={40} height={40} alt="" />
             <div>
               <p className="text-preset-4 dark:text-neutral-0 max-w-35 truncate text-neutral-900">
-                Emily carter
+                {user?.name}
               </p>
               <p className="text-preset-4-medium max-w-40 truncate text-neutral-800 dark:text-neutral-100">
-                emily101@gmail.com
+                {user?.email}
               </p>
             </div>
           </div>
