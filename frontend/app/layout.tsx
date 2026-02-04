@@ -1,6 +1,6 @@
 import './globals.css'
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Manrope } from 'next/font/google'
 
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   description:
     'A simple and efficient bookmark manager application to organize and access your favorite websites with ease.',
   manifest: '/manifest.webmanifest',
+}
+
+export const viewport: Viewport = {
   themeColor: '#001F1F',
 }
 
